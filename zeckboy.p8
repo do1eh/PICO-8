@@ -24,6 +24,7 @@ function _draw()
   cls(1)
   map(0)
   print('punkte:'..p)
+  
   if (not gameover) then
      movedog()
   
@@ -40,9 +41,11 @@ function _draw()
      -- punkte++
      if (pget(x+2,y+8)==4 or pget(x+6,y+8)==4) p=p+1
      -- hund beruet game over
-     if (pget(x+6,y+6)==4) gameover=true
-     if (pget(x,y+6)==4) gameover=true
-    end 
+     if ((pget(x,y+6)==4 or pget(x+6,y+6)==4) and  (pget(x+2,y+8)==3 and pget(x+6,y+8)==3)) gameover=true
+     
+  else
+  print('game over '..p..' punkte')
+  end 
 end
 
 function left()
