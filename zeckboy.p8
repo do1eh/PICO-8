@@ -99,10 +99,10 @@ function movedog()
   spr(dogspr,hx+dogstep,hy,1,1,dogdir)   
   if (dogdir==false) then
     dogstep=dogstep+1
-    if (dogstep>=85) dogdir=true
+    if (dogstep>=105) dogdir=true
   else
    dogstep=dogstep-1
-   if (dogstep<=0) dogdir=false   
+   if (dogstep<=-20) dogdir=false   
   end
   zufall=flr(rnd(100)) + 1
   if  (zufall == 10) dogdir=not dogdir
