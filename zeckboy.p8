@@ -21,7 +21,7 @@ function _init()
   gosfx=false
   leiter=false
   leiterfarben={5,6,7,13}
-  
+  dogspeed=1
 end
 
 
@@ -30,6 +30,7 @@ function _draw()
   cls(1)
   map(0)
   print('punkte:'..p)
+  
   if (titel) then
     print('zeckboy', 50, 15, 7)
     print('springe auf den hund', 19, 30, 7)
@@ -109,17 +110,20 @@ end
 -->8
 --hund
 function movedog()
-  if (dogstep%2==0) then
+  dogspeed=p*0.01
+
+  if (dogspeed<1) dogspeed=1
+  if (flr(dogstep%4)==0) then
      dogspr=4
   else
      dogspr=5
   end      
   spr(dogspr,hx+dogstep,hy,1,1,dogdir)   
   if (dogdir==false) then
-    dogstep=dogstep+1
+    dogstep=dogstep+dogspeed
     if (dogstep>=105) dogdir=true
   else
-   dogstep=dogstep-1
+   dogstep=dogstep-dogspeed
    if (dogstep<=-20) dogdir=false   
   end
   zufall=flr(rnd(100)) + 1
