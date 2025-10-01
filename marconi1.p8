@@ -5,7 +5,7 @@ function _init()
 text_init()
 write_init()
 game_init()
-intro=false
+intro=true
 end
 
 function _update()
@@ -77,6 +77,7 @@ function write(posx, posy)
       if char_index < #text then
         char_index += 1
         current_text = sub(text, 1, char_index)
+        sfx(3)
       else
         text_ready = true
         frame_counter = 0  
@@ -126,14 +127,16 @@ end
 
 function game_init()
  player={x=24,y=72,dir='o'}
- generator={x=24,y=8}
+ --generator={x=24,y=8}
+   generator={x=80,y=72}
  genkabel1={x=16,y=24}
  genkabel2={x=40,y=24}
  genecke1={x=16,y=16}
  genecke2={x=40,y=16}
  genecke3={x=16,y=32}
  genecke4={x=40,y=32}
- kugeln={x=24,y=40,state='off'}
+ --kugeln={x=24,y=40,state='off'}
+kugeln={x=88,y=48,state='off'}
  
  
  fritterecke1={x=80,y=8}
@@ -142,12 +145,14 @@ function game_init()
  fritterkabel2={x=104,y=16}
  fritterecke3={x=80,y=24}
  fritterecke4={x=104,y=24}
- fritter={x=88,y=32,state='off'}
+ --fritter={x=88,y=32,state='off'}
+ fritter={x=24,y=48,state='off'}
 
- objects={genkabel1,genkabel2,genecke1,genecke2,genecke3,genecke4,
-          kugeln,fritterkabel1,fritterkabel2,fritterecke1,fritterecke2,
-          fritterecke3,fritterecke4,fritter}
+ --objects={genkabel1,genkabel2,genecke1,genecke2,genecke3,genecke4,
+ --         kugeln,fritterkabel1,fritterkabel2,fritterecke1,fritterecke2,
+ --         fritterecke3,fritterecke4,fritter}
  
+ objects={generator,kugeln,fritter}
  
 end
 
@@ -205,40 +210,48 @@ end
 
 function move()
     if btn(⬆️) then 
-        if not wandkollision(player,'n') and pushobject() then
+        if not wandkollision(player,'n',true) and pushobject() then
             player.y-=1
+            if frame_counter%6==0 then sfx(2) end
         end
         player.dir='n'
     end
     if btn(⬇️) then 
-        if not wandkollision(player,'s') and pushobject() then
+        if not wandkollision(player,'s',true) and pushobject() then
             player.y+=1
+            if frame_counter%6==0 then sfx(2) end
         end
         player.dir='s'
     end
     if btn(⬅️) then 
-        if not wandkollision(player,'o') and pushobject() then
+        if not wandkollision(player,'o',true) and pushobject() then
             player.x-=1
+            if frame_counter%6==0 then sfx(2) end
         end
         player.dir='o'
     end
     if btn(➡️) then 
-        if not wandkollision(player,'w') and pushobject() then
+        if not wandkollision(player,'w',true) and pushobject() then
             player.x+=1
+            if frame_counter%6==0 then sfx(2) end
         end
         player.dir='w'
     end
 end   
 
-function wandkollision(object, dir)
+function wandkollision(object, dir,bauteil)
     if dir=='n' then
         if fget(mget(object.x/8,object.y/8),0) then
             return true
         end
     end
     if dir=='s' then
-        if fget(mget(object.x/8,object.y/8+2),0) then
+        if not bauteil and fget(mget(object.x/8,object.y/8+1),0) then
             return true
+        else
+            if bauteil and fget(mget(object.x/8,object.y/8+2),0) then
+            return true
+            end
         end
     end
     if dir=='o' then
@@ -260,57 +273,60 @@ for object in all(objects) do
 
 obj=nil    
     if player.dir=='n' then
-        if object.x>=player.x-4 and object.x<=player.x+8 and object.y>=player.y-8 and 
+        if object.x>=player.x-16 and object.x<=player.x+8 and object.y>=player.y-8 and 
         object.y<=player.y then
-            print("nach oben")
-            obj=object
-            break
+        obj=object
+        break
         end    
     end
 
     if player.dir=='s' then
-        if object.x>=player.x and object.x<=player.x+8 and object.y==player.y+8 then
+        if object.x>=player.x-16 and object.x<=player.x+8 and object.y<=player.y+16 and 
+        object.y>=player.y then
+            obj=object
             break
         end    
     end
     if player.dir=='o' then
-        if object.x==player.x-8 and object.y>=player.y and object.y<=player.y+8 then
+        if object.x>=player.x-16 and object.x<=player.x and object.y>=player.y-4 and object.y<=player.y+8 then
+            obj=object
             break
         end    
     end
     if player.dir=='w' then
-        if object.x==player.x+8 and object.y>=player.y and object.y<=player.y+8 then
+        if object.x<=player.x+16 and object.x>=player.x and object.y>=player.y-4 and object.y<=player.y+8 then
+            obj=object
             break
         end    
     end
 end    
 
     if obj==nil then return true end
-print('objekt gefunden '..obj.x..','..obj.y)
+
         if player.dir=='n' then
-            if not wandkollision({x=obj.x,y=obj.y},'n') then
+            if not wandkollision({x=obj.x,y=obj.y-8},'n',false) then
                 obj.y-=8
             else
                 return false
             end
         end
         if player.dir=='s' then
-            if not wandkollision({x=object.x,y=object.y},'s') then
-                object.y+=1
+            if not wandkollision({x=obj.x,y=obj.y+8},'s',false) then
+                obj.y+=8
             else
                 return false
             end
         end
         if player.dir=='o' then
-            if not wandkollision({x=object.x,y=object.y},'o') then
-                object.x-=1
+            if not wandkollision({x=obj.x-8,y=obj.y},'o',false) then
+                obj.x-=8
             else
                 return false
             end
         end
         if player.dir=='w' then
-            if not wandkollision({x=object.x,y=object.y},'w') then
-                object.x+=1
+            if not wandkollision({x=obj.x+8,y=obj.y},'w',false) then
+                obj.x+=8
             else
                 return false
             end
@@ -345,7 +361,9 @@ spr(14,fritterecke2.x,fritterecke2.y,1,1,false,true)
 spr(14,fritterecke3.x,fritterecke3.y,1,1,true,false)
 spr(14,fritterecke4.x,fritterecke4.y,1,1,false,false)
 
+--funken
 if kugeln.state=='on' then
+    sfx(0)
     if frame_counter<10 then
         spr(9,kugeln.x,kugeln.y,2,1)
     else    
@@ -359,13 +377,19 @@ end
 --KLingel
 if fritter.state=='on' then
     if frame_counter<10 then
+        sfx(1)
         spr(33,88,0,2,2)
     else    
         spr(37,88,0,2,2)
     end
-    
-end
+end   
 
+
+--gewonnen
+if fritter.state=='on' then
+    print("juhu es funktioniert!",10,68,6)
+    print("das loesungswort ist: das",10,76,6)
+end
 end
 __gfx__
 00000000055555000555550000555550005555500055555000000000444474449444744900000000000000000000000000000000000660000006600000000000
@@ -541,11 +565,16 @@ __map__
 2334333433343334233433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334233433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334233433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-2334333433343334233433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-2334333433343334233433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334232323343323232300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2334333433343334272827343328272300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2334333433343334272827343328272300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334333433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334333433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334333433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2334333433343334333433343334332300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2323232323232323232323232323232300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+00010000102500f2500f2500f25000250012500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000003b5503b500005001850000000000000000029500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00010000005302c600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100000931000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
