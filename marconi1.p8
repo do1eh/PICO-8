@@ -83,7 +83,7 @@ function write(posx, posy)
         frame_counter = 0  
     end
     end
-    print(current_text, posx, posy, 7) -- 7 ist eine helle farbe 
+    print(current_text, posx, posy, 7) 
     
 end
 
