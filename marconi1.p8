@@ -205,7 +205,10 @@ function game_update()
  end
  issenderready()
  isreceiverready()
- move()   
+ move()
+ if btn(❎) then
+    game_init()
+ end    
 end
 
 function move()
@@ -390,6 +393,7 @@ if fritter.state=='on' then
     print("juhu es funktioniert!",10,68,6)
     print("das loesungswort ist: das",10,76,6)
 end
+print("druecke ❎ zum neustart",10,120,7)
 end
 __gfx__
 00000000055555000555550000555550005555500055555000000000444474449444744900000000000000000000000000000000000660000006600000000000
