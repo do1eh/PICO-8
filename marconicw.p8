@@ -63,7 +63,7 @@ text_zeile = 0
 end
 
 function write(posx, posy)
-    if btnp(🅾️) then intro=false end
+    if btnp(🅾️) then intro=false text_ready=true game_init() return end
     frame_counter+=1
     if (btn(❎)) char_index=#text-1
     if frame_counter >= delay_frames  then
@@ -125,6 +125,7 @@ function game_init()
  paper_counter=1
  animatepaper=false
  win=false
+ frame_counter=0
 end
 
 
