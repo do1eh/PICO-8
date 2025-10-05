@@ -128,6 +128,8 @@ function game_init()
  peiler3={x=120,y=32,winkel=0,signal=0}
  peiler4={x=8,y=64,winkel=0,signal=0}
  currentpeiler=0
+ win=false
+ lose=false
 end
 
 --das schiff muss schwimmen
@@ -206,31 +208,36 @@ function move()
         if (player.y<110) player.y+=8
     end
     if btnp(⬅️) then 
-        if (player.x>0) player.x-=8
+      if (player.x>0) player.x-=8
     end
     if btnp(➡️) then 
-        if (player.x<120) player.x+=8
+      if (player.x<120) player.x+=8
     end
     getpeiler()
     if btnp(❎) then 
-        --wenn auf spieler auf peiler steht
-        if currentpeiler.x>0 then
-            currentpeiler.winkel+=5
-            if (currentpeiler.winkel>360) currentpeiler.winkel=0
+      
+      if lose then
+         game_init()
+         return
+      end
+      --wenn auf spieler auf peiler steht
+      if currentpeiler.x>0 then
+        currentpeiler.winkel+=5
+        if (currentpeiler.winkel>360) currentpeiler.winkel=0
             getsignal()
         --wenn spieler nicht auf peiler steht: position einloggen
-        else
+      else
             --es reicht eine kästchen um das schiff herum
             if player.x>=schiff.x-8 and player.x<=schiff.x+8 and player.y>=schiff.y-8 and player.y<=schiff.y+8 then   
-                print('hier',20,20)
+              
              win=true
-          else
-             print('looo',20,20)
-           lose=true
+            else
+              
+              lose=true
           end    
         end 
-    end 
-    if btnp(🅾️) then 
+      end 
+      if btnp(🅾️) then 
         
         currentpeiler.winkel-=5
         if (currentpeiler.winkel<0) currentpeiler.winkel=360
@@ -271,7 +278,7 @@ spr(6,player.x,player.y,1,1)
 --    end 
    
 
-spr(62,schiff.x,schiff.y,1,1)
+
 spr(46,peiler1.x,peiler1.y,1,1)
 spr(46,peiler2.x,peiler2.y,1,1)
 spr(46,peiler3.x,peiler3.y,1,1)
@@ -280,12 +287,25 @@ peilstrahl_draw()
 draw_signal()
 --gewonnen
 if win then
+    spr(62,schiff.x,schiff.y,1,1)
     print("juhu das schiff ist gerettet!",5,29,0)
     print("das loesungswort ist: keinen",5,37,0)
     print("juhu das schiff ist gerettet!",4,28,10)
     print("das loesungswort ist: keinen",4,36,10)
 end
-print("❎ links 🅾️ rechts drehen",10,120,7)
+--verloren
+if lose then
+    print("oh nein dort ist kein schiff!",5,29,0)
+    print("❎ - noch einmal zu versuchen",5,37,0)
+     print("oh nein dort ist kein schiff!",4,28,10)
+    print("❎ - noch einmal zu versuchen",4,36,10)
+end
+
+if currentpeiler.x>0 then
+   print("❎ links 🅾️ rechts drehen",10,120,7)
+else
+  print("❎ retter hier hin schicken",10,120,7)
+end
 end
 
 function peilstrahl_draw()
