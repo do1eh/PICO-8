@@ -224,7 +224,7 @@ function move()
     getpeiler()
     if btnp(❎) then 
       
-      if lose then
+      if lose or win then
          game_init()
          return
       end
@@ -314,13 +314,21 @@ if currentpeiler.x>0 then
       --sfx(0)
       --rauschen=true
    end        
-   print("❎ links 🅾️ rechts drehen",10,120,7)
-else
+   if (lose or win) then
+    print("❎ nochmal spielen?",10,120,7)
+   else
+    print("❎ rechts 🅾️ links drehen",10,120,7)
+   end
+  else
   if rauschen then
       --sfx(-1)
       --rauschen=false
    end  
-  print("❎ retter hier hin schicken",10,120,7)
+   if (lose or win) then
+    print("❎ nochmal spielen?",10,120,7)
+   else
+    print("❎ retter hier hin schicken",10,120,7)
+   end 
 end
 end
 
@@ -338,10 +346,6 @@ function resetsos()
   sos11=false
   sos12=false
   sos13=false
-  --sfx(-2, 2)
-  --sfx(-2, 1)
-  --sfx(-1, 2)
-  --sfx(-1, 1)
   sfx(-1)
 end
 
