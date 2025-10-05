@@ -349,13 +349,22 @@ function draw_signal()
 
     swert=currentpeiler.signal
     if swert==-1 then resetsos() end
-    if swert==0 then rectfill(17,118,19,118,11) resetsos() sfx(0,1) end
-    if swert==1 then rectfill(17,116,19,116,11) if not sos8 then resetsos() sos8=true sfx(8,2)  sfx(0,1) end end
-    if swert==2 then rectfill(17,114,19,114,11) if not sos9 then resetsos() sos9=true sfx(9,2) sfx(1,1)  end end
-    if swert==3 then rectfill(17,112,19,112,11) if not sos10 then resetsos() sos10=true sfx(10,2) sfx(2,1) end end
-    if swert==4 then rectfill(17,110,19,110,11) if not sos11 then resetsos() sos11=true sfx(11,2) sfx(3,1) end end
-    if swert==5 then rectfill(17,108,19,108,8)  if not sos12 then resetsos() sos12=true sfx(12,2)  end end
-    if swert==6 then rectfill(17,106,19,106,8)  if not sos13 then resetsos() sos13=true sfx(13,2)  end end
+    if swert==0 then resetsos() sfx(0,1) end
+    if swert==1 and not sos8 then resetsos() sos8=true sfx(8,2)  sfx(0,1) end 
+    if swert==2 and not sos9 then resetsos() sos9=true sfx(9,2) sfx(1,1)  end 
+    if swert==3 and not sos10 then resetsos() sos10=true sfx(10,2) sfx(2,1) end 
+    if swert==4 and not sos11 then resetsos() sos11=true sfx(11,2) sfx(3,1) end 
+    if swert==5 and not sos12 then resetsos() sos12=true sfx(12,2)  end 
+    if swert==6 and not sos13 then resetsos() sos13=true sfx(13,2)  end 
+
+    if swert>0 then rectfill(17,118,19,118,11) end
+    if swert>1 then rectfill(17,116,19,116,11)  end
+    if swert>2 then rectfill(17,114,19,114,11) end
+    if swert>3 then rectfill(17,112,19,112,11)  end
+    if swert>4 then rectfill(17,110,19,110,11)  end
+    if swert>5 then rectfill(17,108,19,108,8)   end
+    if swert>6 then rectfill(17,106,19,106,8)   end
+
 end
 function draw_line_polar(ursprungx, ursprungy, winkel, laenge, farbe)
     -- Konvertiere den Winkel von Grad in Radiant (Pico-8's sin/cos erwarten Radiant)
