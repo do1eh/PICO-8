@@ -63,6 +63,7 @@ text_zeile = 0
 end
 
 function write(posx, posy)
+    if btnp(🅾️) then intro=false end
     frame_counter+=1
     if (btn(❎)) char_index=#text-1
     if frame_counter >= delay_frames  then
