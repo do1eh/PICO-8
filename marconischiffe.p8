@@ -7,6 +7,7 @@ text_init()
 write_init()
 game_init()
 intro=false
+--sfx(0)
 end
 
 function _update()
@@ -118,13 +119,15 @@ end
 --game
 
 function game_init()
-    
+ reichweite=80   
  player={x=24,y=72,dir='o'}
  schiffzufallsposition()
- peiler1={x=32,y=40,winkel=90}
- peiler2={x=104,y=104,winkel=90}
- peiler3={x=120,y=32,winkel=90}
- peiler4={x=8,y=64,winkel=90}
+ peiler0={x=32,y=40,winkel=0,signal=0}
+ peiler1={x=32,y=40,winkel=0,signal=0}
+ peiler2={x=104,y=104,winkel=0,signal=0}
+ peiler3={x=120,y=32,winkel=0,signal=0}
+ peiler4={x=8,y=64,winkel=0,signal=0}
+ currentpeiler=0
 end
 
 --das schiff muss schwimmen
@@ -152,46 +155,103 @@ function checkwasser()
    return true  
 end
 
+--s-meter für peiler abfragen
+function getsignal()
+     --max s-stufe=7
+     maxs=7
+     --öffungswinkel 45 grad
+     oeffnunswinkel=45
+     --reichweite checken
+     abstand=get_distance(currentpeiler.x,currentpeiler.y,schiff.x,schiff.y)
+
+     if abstand>reichweite then
+        currentpeiler.signal=0
+     else   
+     --je näher der winkel des aktuellen peilers dem schiff kommt
+     --umso lauter wird das signal
+     -- +4 damit die mitte der sprites getroffen wird
+     local zielwinkel=get_angle(currentpeiler.x,currentpeiler.y,schiff.x,schiff.y+4)
+     local winkeldifferenz=0
+     if (zielwinkel>=currentpeiler.winkel) then
+        winkeldifferenz=zielwinkel-currentpeiler.winkel
+     else
+        winkeldifferenz=currentpeiler.winkel-zielwinkel 
+     end
+     if winkeldifferenz>oeffnunswinkel then
+        currentpeiler.signal=0
+     else
+        currentpeiler.signal=maxs-(6*winkeldifferenz/oeffnunswinkel) 
+        if currentpeiler.signal<6.8 then
+            currentpeiler.signal=flr(currentpeiler.signal)
+        else
+            currentpeiler.signal=7
+        end    
+     end
+     --print('diff '..winkeldifferenz,10,30,7)
+     --print('peil '..currentpeiler.winkel,10,40,7)
+     --print('ziel '..zielwinkel,10,70,7)
+     
+    end
+end    
+
 function game_update()
 move()
 end  
 
 function move()
     if btnp(⬆️) then 
-       if (player.y>0) player.y-=8
+        if (player.y>0) player.y-=8
     end
     if btnp(⬇️) then 
-       if (player.y<110) player.y+=8
+        if (player.y<110) player.y+=8
     end
     if btnp(⬅️) then 
-       if (player.x>0) player.x-=8
+        if (player.x>0) player.x-=8
     end
     if btnp(➡️) then 
-      if (player.x<120) player.x+=8
+        if (player.x<120) player.x+=8
     end
+    getpeiler()
     if btnp(❎) then 
-      if (player.x==peiler1.x and player.y==peiler1.y) then
-        peiler1.winkel+=1
-        if (peiler1.winkel>360) peiler.winkel=0
-      end
-      if (player.x==peiler2.x and player.y==peiler2.y) then
-        peiler2.winkel+=1
-        if (peiler2.winkel>360) peiler2.winkel=0
-      end
-      if (player.x==peiler3.x and player.y==peiler3.y) then
-        peiler3.winkel+=1
-        if (peiler3.winkel>360) peiler.winkel=0
-      end
-      if (player.x==peiler4.x and player.y==peiler4.y) then
-        peiler4.winkel+=1
-        if (peiler4.winkel>360) peiler.winkel=0
-      end    
-    end    
+        --getpeiler()
+        currentpeiler.winkel+=5
+        if (currentpeiler.winkel>360) currentpeiler.winkel=0
+        getsignal()
+        
+    end 
+    if btnp(🅾️) then 
+        --getpeiler()
+        currentpeiler.winkel-=5
+        if (currentpeiler.winkel<0) currentpeiler.winkel=360
+        getsignal()
+        
+    end
+    
+
 end
+
+--anhand der cursorpositon den peiler bestimmen
+function getpeiler()
+
+    if (player.x==peiler1.x and player.y==peiler1.y) then
+        currentpeiler=peiler1
+       elseif (player.x==peiler2.x and player.y==peiler2.y) then
+        currentpeiler=peiler2
+       elseif (player.x==peiler3.x and player.y==peiler3.y) then
+        currentpeiler=peiler3      
+       elseif (player.x==peiler4.x and player.y==peiler4.y) then
+        currentpeiler=peiler4
+      else
+        currentpeiler=peiler0   
+      end
+    end
+
 
 
 function game_draw()
 map()
+getpeiler()
+--print(currentpeiler.signal,10,10,7)
 spr(6,player.x,player.y,1,1)
 --for x=schiff.x,schiff.x+8,1 do
 --        for y=schiff.y,schiff.y+8,1 do
@@ -206,7 +266,7 @@ spr(46,peiler2.x,peiler2.y,1,1)
 spr(46,peiler3.x,peiler3.y,1,1)
 spr(46,peiler4.x,peiler4.y,1,1)
 peilstrahl_draw()
-
+draw_signal()
 --gewonnen
 if win then
     print("juhu es funktioniert!",10,68,6)
@@ -216,16 +276,32 @@ print("❎ links 🅾️ rechts drehen",10,120,7)
 end
 
 function peilstrahl_draw()
-    draw_line_polar(peiler1.x+4,peiler1.y,peiler1.winkel,80,7)
-    draw_line_polar(peiler2.x+4,peiler2.y,peiler2.winkel,80,7)
-    draw_line_polar(peiler3.x+4,peiler3.y,peiler3.winkel,80,7)
-    draw_line_polar(peiler4.x+4,peiler4.y,peiler4.winkel,80,7)
-end  
+    draw_line_polar(peiler1.x+4,peiler1.y,peiler1.winkel,reichweite,7)
+    draw_line_polar(peiler2.x+4,peiler2.y,peiler2.winkel,reichweite,7)
+    draw_line_polar(peiler3.x+4,peiler3.y,peiler3.winkel,reichweite,7)
+    draw_line_polar(peiler4.x+4,peiler4.y,peiler4.winkel,reichweite,7)
+end 
+
+function draw_signal()
+
+    swert=currentpeiler.signal
+
+    if (swert>0) rectfill(17,118,19,118,11)
+    if (swert>1) rectfill(17,116,19,116,11)
+    if (swert>2) rectfill(17,114,19,114,11)
+    if (swert>3) rectfill(17,112,19,112,11)
+    if (swert>4) rectfill(17,110,19,110,11)
+    if (swert>5) rectfill(17,108,19,108,8)
+    if (swert>6) rectfill(17,106,19,106,8)
+end
 function draw_line_polar(ursprungx, ursprungy, winkel, laenge, farbe)
     -- Konvertiere den Winkel von Grad in Radiant (Pico-8's sin/cos erwarten Radiant)
-    local rad = (winkel * 0.0174533) -- 0.0174533 ist Pi / 180
-    local dx = cos(rad) * laenge
-    local dy = sin(rad) * laenge
+    --local rad = (winkel * 0.0174533) -- 0.0174533 ist Pi / 180
+    --pico8 nutzt eine bescheuterte winkeldarstellung ich nenne sie pgrad
+    winkel=winkel-180
+    local pgrad = (winkel/360)
+    local dx = sin(pgrad) * laenge
+    local dy = cos(pgrad) * laenge
 
     -- Berechne die Endkoordinaten (x1, y1)
     local x1 = ursprungx + dx
@@ -235,26 +311,154 @@ function draw_line_polar(ursprungx, ursprungy, winkel, laenge, farbe)
     line(ursprungx, ursprungy, x1, y1, farbe)
 end
 
-function getsignalstaerke(x,y)
- local zielwinkel=get_angle(x,y,schiff.x,schiff,y)
- local peilwinkel=0
- if (x) --hier weiter
- -- abstand berechnen ob außer reichweite
-end
 function get_angle(ursprungx, ursprungy, zielx, ziely)
-    
     local dx = zielx - ursprungx
-    local dy = ziely - ursprungy
-    local rad = atan2(dx, dy)
-    local winkel_grad = rad * 57.29578 
-    if winkel_grad < 0 then
-        winkel_grad += 360
+    local dy = ursprungy - ziely
+    local norm_winkel = atan2(dx, dy)
+     if norm_winkel < 0 then
+        norm_winkel += 1
     end
+    norm_winkel=norm_winkel*360+90
+    if (norm_winkel>360) norm_winkel=norm_winkel- 360 
+    return norm_winkel
 
-    return winkel_grad
+end
+
+function get_distance(ursprungx, ursprungy, zielx, ziely)
+    -- Differenz auf der X-Achse (a)
+    local dx = zielx - ursprungx
+     -- Differenz auf der Y-Achse (b)
+    local dy = ziely - ursprungy
+    --Satz des Pythagoras
+    local abstand = sqrt(dx^2 + dy^2)
+    return abstand
 end
 
 
+
+-->8
+-- comprehensive bit library
+-- standard ⌂ pico-8 license
+
+-- success! 10-05-19
+
+-- music by the incomparable
+-- zep
+
+
+
+function _volumeinit()
+    -- number of sfx to affect?
+    affectfx=0
+    -- starting volume
+    -- 0=no change
+    volume=0
+  --music(0)
+end
+
+function changevolume(fx,vol)
+ affectfx=fx
+ volume=vol   
+ volume=mid(-8,volume,8)
+  reload(12800,12800,affectfx*68)
+  for i=0,affectfx-1 do
+    for j=1,63,2 do
+      n=peek(12800+i*68+j)
+
+-- new method, checkout the
+-- new binary libs below!
+
+      p=bitget(n,"123",1)
+      p+=volume
+      p=mid(0,p,7)
+      n=bitmod(n,p,"123",1)
+
+
+      poke(12800+i*68+j,n)
+    end
+  end
+end
+
+function _volumedraw()
+  cls()
+  ?"david's nifty volume changer"
+  ?""
+  print("volume="..volume)
+  if (btnp(0)) volume-=1
+  if (btnp(1)) volume+=1
+  volume=mid(-8,volume,8)
+  reload(12800,12800,affectfx*68)
+  for i=0,affectfx-1 do
+    for j=1,63,2 do
+      n=peek(12800+i*68+j)
+
+-- new method, checkout the
+-- new binary libs below!
+
+      p=bitget(n,"123",1)
+      p+=volume
+      p=mid(0,p,7)
+      n=bitmod(n,p,"123",1)
+
+
+      poke(12800+i*68+j,n)
+    end
+  end
+end
+
+-- return bits of a from string
+-- b contains chars 0-7 option
+-- c for shift right
+function bitget(a,b,c)
+local r=0
+  if c==nil or c=="" then
+    c=0
+  end
+  for i=1,#b do
+    r+=shr(band(a,shl(1,sub(b,i,i))),c)
+  end
+  return r
+end
+
+-- modify number in a from
+-- number b using bits markers
+-- from string c chars 0-7 and
+-- optional d for shift left
+function bitmod(a,b,c,d)
+  if d==nil or d=="" then
+    d=0
+  end
+  return bor(bitclr(a,c),shl(b,d))
+end
+
+-- change bits to on of a from
+-- string b contains chars 0-7
+function bitset(a,b)
+local r,c=a
+  for i=1,#b do
+    r=bor(r,shl(1,sub(b,i,i)))
+  end
+  return r
+end
+
+-- clear bits of number a from
+-- string b chars 0-7
+function bitclr(a,b)
+local r,c=a
+  for i=1,#b do
+    c=sub(b,i,i)
+    r-=band(r,shl(1,c))
+  end
+  return r
+end
+
+-- return true or false for bit
+-- b being set in number a
+function bittest(a,b)
+local r=false
+  if (band(a,(shl(1,b)))>0) r=true
+  return r
+end--btst(..)
 __gfx__
 000000000555550005555500005555500055555000555550dddddddd111111111111111111111111111111111111111111111111111111111111111155555555
 000000000c66c5000c66c50000c6665000c6665000555550d000000d111111111111111111111111111111111111111111111111111111111111111144444444
@@ -435,7 +639,7 @@ __map__
 0f0f202116161616161616162627163b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 2f1f303138383836383836373637383900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-00010000102500f2500f2500f25000250012500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0006001e1765017650186501765017650176501765018650176501865018650186501865017650176501665015650136501165014650146501565015650156501365017650196501765017650176500000000000
 001000003b5503b500005001850000000000000000029500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00010000005302c600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000100000931000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
