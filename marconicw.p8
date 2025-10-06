@@ -55,9 +55,9 @@ add(texte,"texte auf ein")
 add(texte,"papierband schreibt.") 
 add(texte,"um das zu testen will ich")
 add(texte,"das wort morse senden.")
-add(texte,"dazu muss ich die buchstaben")
-add(texte,"richtig anordnen und die") 
-add(texte,"sendetaste druecken.")
+add(texte,"dazu muss ich die richtigen")
+add(texte,"Zeichen oben oder unten finden") 
+add(texte,"und die sendetaste druecken.")
 delay_frames = 2 -- Wie viele Frames auf einen Buchstaben gewartet wird
 text_zeile = 0
 end
