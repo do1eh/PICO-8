@@ -195,7 +195,7 @@ function isreceiverready()
     if (kugeln.state=='on') then
         fritter.state='on'
     end
-    return trues
+    return true
 else
    fritter.state='off'
    return false
