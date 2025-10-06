@@ -6,6 +6,9 @@ text_init()
 write_init()
 game_init()
 intro=true
+--rauch
+particles = {}
+max_particles = 30 
 end
 
 function _update()
@@ -388,14 +391,78 @@ if fritter.state=='on' then
     end
 end   
 
+--frittiert
+if generator.x==24 and generator.y==8 and fritter.x==24 and fritter.y==32 then
+    sfx(4)
+    update_particles()
+    draw_rauch(33, 36) 
+    draw_particles()
+    print("du hast den fritter frittiert!",10,68,7)
+    print("druecke ❎ zum neustart",10,76,7)
+end    
 
 --gewonnen
 if fritter.state=='on' then
-    print("juhu es funktioniert!",10,68,6)
-    print("das loesungswort ist: das",10,76,6)
+    print("juhu es funktioniert!",10,68,7)
+    print("das loesungswort ist: das",10,76,7)
 end
 print("druecke ❎ zum neustart",10,120,7)
 end
+
+function add_particle(px, py)
+    if #particles < max_particles then
+        add(particles, {
+            x = px,
+            y = py,
+            vx = rnd(0.5) - 0.25, -- Zufれさllige horizontale Bewegung
+            vy = -0.5 - rnd(0.5), -- Steigt nach oben (negative Y-Geschwindigkeit)
+            radius = 1 + rnd(1),  -- Startradius 1 oder 2
+            lifetime = 30 + rnd(30), -- Lebensdauer in Frames (ca. 1-2 Sekunden)
+            max_lifetime = 30 + rnd(30),
+            color = 0 -- Startfarbe (wird im Laufe des Lebenszyklus geれさndert)
+        })
+    end
+end
+
+function update_particles()
+    for i = #particles, 1, -1 do
+        local p = particles[i]
+
+        p.x += p.vx
+        p.y += p.vy
+
+        p.radius += 0.1
+        p.vy += 0.01 
+        p.vx *= 0.99
+
+        local life_ratio = p.lifetime / p.max_lifetime
+        -- Farbe 0 ist der Hintergrund. Wir gehen von dunkleren Farben zu helleren れもber.
+        -- Farbe 1 ist meistens schwarz, 7 ist weiれか. Dies hれさngt von deiner Farbpalette ab.
+        -- Fれもr einen Rauch, der sich auflれへst, kれへnnte man von einer grauen Farbe zu einer helleren れもbergehen.
+        -- Hier ein Beispiel von Farbe 6 (dunkelgrau) zu Farbe 7 (hellgrau/weiれか)
+        p.color = 6 + flr((1 - life_ratio) * 2) -- Beginnt mit 6, wird zu 7 oder 8
+        if p.color > 7 then p.color = 7 end -- Sicherstellen, dass die Farbe im Bereich bleibt
+        
+        p.lifetime -= 1
+
+        if p.lifetime <= 0 then
+            del(particles, p)
+        end
+    end
+end
+
+function draw_particles()
+    for p in all(particles) do
+        circfill(p.x, p.y, p.radius, p.color)
+    end
+end
+
+function draw_rauch(x, y)
+    if rnd(1) < 0.2 then 
+        add_particle(x + rnd(4) - 2, y + rnd(4) - 2) 
+    end
+end   
+
 __gfx__
 00000000055555000555550000555550005555500055555000000000444474449444744900000000000000000000000000000000000660000006600000000000
 000000000c66c5000c66c50000c6665000c666500055555000000000444474449444744900005500005500000000550000550000000660000006600000000000
@@ -583,3 +650,7 @@ __sfx__
 001000003b5503b500005001850000000000000000029500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00010000005302c600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000100000931000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100000c6500d6500b6500e6500000000000000000000012600126001260014600146001660012600126000f6000d6001060010600106001060000000000000000000000000000000000000000000000000000
+__music__
+01 06424344
+
