@@ -128,11 +128,12 @@ end
 
 function game_init()
    
- sender={x=24,y=72,elevation=0,power=0}
- 
+ sender={x=12,y=118,elevation=0,power=50}
+ welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
+ strecke=1
  win=false
  lose=false
- 
+ welle.start=true
  
 end
 
@@ -142,6 +143,38 @@ end
 
 function game_update()
 move()
+
+--wellenanimation
+   if not welle.start then
+   --koordinaten 1 pixel weiter in winkel richtung
+   zielpunkt={}
+   zielpunkt=project_line_polar(welle.startx,welle.starty,welle.winkel,strecke)
+   sensor={}
+   sensor=project_line_polar(welle.startx,welle.starty,welle.winkel,strecke)
+   
+   --wenn ionosphäre getroffen dann welle welle resetten und spiegeln
+   --pset(sensor.x,sensor.y,7)
+   printh(pget(sensor.x,sensor.y))
+   if not welle.start and pget(sensor.x,sensor.y)==0 then 
+      --welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
+      strecke=0
+      printh('spiegel')
+      welle.startx=welle.y
+      welle.starty=welle.y
+      spiegelwinkel=get_angle(64, 130, welle.x, welle.y)
+      printh('ele'..sender.elevation)
+      printh ('ww'..welle.winkel)
+      printh('sw'..spiegelwinkel)
+      welle.winkel=spiegelwinkel
+    end   
+   
+   
+   welle.x=zielpunkt.x
+   welle.y=zielpunkt.y
+   welle.power=welle.power-1
+   strecke+=2
+end
+
 end  
 
 function move()
@@ -159,8 +192,16 @@ function move()
     end
     
     if btnp(❎) then 
-      
+        printh(welle.y..''..welle.y)
+        welle.start=true
+        strecke=1
+        if welle.start then 
+        init_welle()
+        welle.start=false
+    end   
+
       if lose or win then
+        printh("lose or win")
          game_init()
          return
       end
@@ -169,8 +210,8 @@ function move()
               
              win=true
             else
-              
-              lose=true
+                
+                
           end    
         
        
@@ -182,17 +223,27 @@ function move()
 
 end
 
-
-
+function init_welle()
+   welle.x=sender.x
+   welle.y=sender.y
+   welle.startx=sender.x
+   welle.starty=sender.y
+   welle.winkel=sender.elevation
+   strecke=0
+   welle.power=sender.power
+end       
 
 function game_draw()
 --map()
+print("sendeleistung:"..sender.power,10,10,7)
 --erde
 circfill( 64, 130, 90, 12 )
 circfill( 64, 130, 50, 3 )
 --empfangsantenne
 ovalfill( 114, 120, 124, 122, 7 )
 antenne_draw()
+
+
 --gewonnen
 if win then
     
@@ -225,10 +276,24 @@ end
 end
 
 function antenne_draw()
+    welle_draw()
    rectfill(12,118,16,118,7)
    draw_rotated_rect(12,110,12,131,sender.elevation,7)
-   --printh(sender.elevation)
+   
 end
+
+function welle_draw(x,y,winkel)
+
+     
+    if (welle.power>0 and welle.start==false) then
+    --printh(welle.x)
+    --printh(welle.y)
+     draw_segment(welle.x, welle.y+10, 10, 0.15+welle.winkel, 0.35+welle.winkel, 4)
+    else
+      welle.start=true
+      init_welle()
+    end  
+end   
 
 function draw_rotated_rect(x, y, x2, y2, drehwinkel, farbe)
     -- 1. Berechne die Abmessungen und den Mittelpunkt des Rechtecks
@@ -281,42 +346,48 @@ function draw_rotated_rect(x, y, x2, y2, drehwinkel, farbe)
     end
 end
 
-function peilstrahl_draw()
-    draw_line_polar(peiler1.x+4,peiler1.y,peiler1.winkel,reichweite,7)
-    draw_line_polar(peiler2.x+4,peiler2.y,peiler2.winkel,reichweite,7)
-    draw_line_polar(peiler3.x+4,peiler3.y,peiler3.winkel,reichweite,7)
-    draw_line_polar(peiler4.x+4,peiler4.y,peiler4.winkel,reichweite,7)
-end 
-
-
-
-function draw_signal()
-
-    swert=currentpeiler.signal
-    if swert==-1 then resetsos() end
-    if swert==0 then resetsos() sfx(0,1) end
-    if swert==1 and not sos8 then resetsos() sos8=true sfx(8,2)  sfx(0,1) end 
-    if swert==2 and not sos9 then resetsos() sos9=true sfx(9,2) sfx(1,1)  end 
-    if swert==3 and not sos10 then resetsos() sos10=true sfx(10,2) sfx(2,1) end 
-    if swert==4 and not sos11 then resetsos() sos11=true sfx(11,2) sfx(3,1) end 
-    if swert==5 and not sos12 then resetsos() sos12=true sfx(12,2)  end 
-    if swert==6 and not sos13 then resetsos() sos13=true sfx(13,2)  end 
-
-    if swert>0 then rectfill(17,118,19,118,11) end
-    if swert>1 then rectfill(17,116,19,116,11)  end
-    if swert>2 then rectfill(17,114,19,114,11) end
-    if swert>3 then rectfill(17,112,19,112,11)  end
-    if swert>4 then rectfill(17,110,19,110,11)  end
-    if swert>5 then rectfill(17,108,19,108,8)   end
-    if swert>6 then rectfill(17,106,19,106,8)   end
-
+function draw_segment(x, y, radius, start_winkel, ende_winkel, farbe)
+    local segments = flr(radius * 3.5) -- Die Anzahl der Punkte, die gezeichnet werden. Mehr Punkte = glatterer Bogen.
+    
+    -- Sicherstellen, dass die Winkel im Bereich 0.0 bis 1.0 sind
+    start_winkel = start_winkel % 1
+    ende_winkel = ende_winkel % 1
+    
+    -- Korrektur, wenn der Bogen den Übergang von 1.0 auf 0.0 überschreitet
+    local winkel_spanne = ende_winkel - start_winkel
+    if winkel_spanne < 0 then
+        winkel_spanne += 1
+    end
+    
+    -- Berechne die Winkelinkremente (den Schritt, den wir entlang des Bogens gehen)
+    local winkel_schritt = winkel_spanne / segments
+    
+    -- Gehe alle Punkte entlang des Bogens durch
+    for i = 0, segments do
+        -- Der aktuelle Winkel, den wir zeichnen
+        local current_winkel = start_winkel + winkel_schritt * i
+        
+        -- Berechne die X- und Y-Koordinate auf dem Kreisumfang
+        local px = x + cos(current_winkel) * radius
+        local py = y + sin(current_winkel) * radius
+        
+        -- Zeichne den einzelnen Pixel
+        pset(px, py, farbe)
+    end
 end
-function draw_line_polar(ursprungx, ursprungy, winkel, laenge, farbe)
+
+
+
+
+
+
+function project_line_polar(ursprungx, ursprungy, winkel, laenge)
     -- Konvertiere den Winkel von Grad in Radiant (Pico-8's sin/cos erwarten Radiant)
     --local rad = (winkel * 0.0174533) -- 0.0174533 ist Pi / 180
     --pico8 nutzt eine bescheuterte winkeldarstellung ich nenne sie pgrad
-    winkel=winkel-180
-    local pgrad = (winkel/360)
+    --winkel=winkel-180
+   -- local pgrad = (winkel/360)
+    local pgrad = -winkel+0.5
     local dx = sin(pgrad) * laenge
     local dy = cos(pgrad) * laenge
 
@@ -325,7 +396,9 @@ function draw_line_polar(ursprungx, ursprungy, winkel, laenge, farbe)
     local y1 = ursprungy + dy
 
     -- Zeichne die Linie
-    line(ursprungx, ursprungy, x1, y1, farbe)
+    --line(ursprungx, ursprungy, x1, y1, farbe)
+    projectedpoint={x=x1,y=y1}
+    return projectedpoint
 end
 
 function get_angle(ursprungx, ursprungy, zielx, ziely)
@@ -335,8 +408,8 @@ function get_angle(ursprungx, ursprungy, zielx, ziely)
      if norm_winkel < 0 then
         norm_winkel += 1
     end
-    norm_winkel=norm_winkel*360+90
-    if (norm_winkel>360) norm_winkel=norm_winkel- 360 
+    --norm_winkel=norm_winkel*360+90
+    --if (norm_winkel>360) norm_winkel=norm_winkel- 360 
     return norm_winkel
 
 end
