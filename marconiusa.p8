@@ -152,9 +152,15 @@ move()
    sensor={}
    sensor=project_line_polar(welle.startx,welle.starty,welle.winkel,strecke)
    
-   --wenn ionosphäre getroffen dann welle welle resetten und spiegeln
+   --wenn ionosphäre getroffen dann welle resetten und spiegeln
    --pset(sensor.x,sensor.y,7)
    printh(pget(sensor.x,sensor.y))
+
+   if pget(sensor.x,sensor.y)==13 then
+      welle.start=true
+      win=true
+   end
+
    if not welle.start and pget(sensor.x,sensor.y)==0 then 
       --welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
       strecke=0
@@ -162,6 +168,10 @@ move()
       welle.startx=welle.y
       welle.starty=welle.y
       spiegelwinkel=get_angle(64, 130, welle.x, welle.y)
+      --spiegelwinkel+=0.5
+      --normalisieren
+      if (spiegelwinkel>1) spiegelwinkel-=1
+      winkeldiffenrenz=welle.winkel 
       printh('ele'..sender.elevation)
       printh ('ww'..welle.winkel)
       printh('sw'..spiegelwinkel)
@@ -240,20 +250,20 @@ print("sendeleistung:"..sender.power,10,10,7)
 circfill( 64, 130, 90, 12 )
 circfill( 64, 130, 50, 3 )
 --empfangsantenne
-ovalfill( 114, 120, 124, 122, 7 )
+ovalfill( 114, 120, 124, 122, 13 )
 antenne_draw()
 
 
 --gewonnen
 if win then
     
-    print("ich bin der beste!",5,29,0)
-    print("das loesungswort ist: gurkensalat",5,37,0)
-     print("du hast jetzt den loesungssatz",5,37,0)
-    print("geh jetzt zum spielleiter",5,37,0)
-    print("und beantworte folgende frage:",5,37,0)
-    print("wer hat den satz gesagt",5,37,0)
-     print("und warum?",5,37,0)
+    print("ich bin der beste!",5,29,7)
+    print("loesungswort: gurkensalat",5,37,7)
+     print("du hast jetzt den loesungssatz",5,47,7)
+    print("geh jetzt zum spielleiter",5,57,7)
+    print("und beantworte folgende frage:",5,67,7)
+    print("wer hat den satz gesagt",5,77,7)
+     print("und warum?",5,87,7)
 end
 --verloren
 if lose then
