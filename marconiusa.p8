@@ -128,8 +128,8 @@ end
 
 function game_init()
    
- sender={x=12,y=118,elevation=0,power=50}
- welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
+ sender={x=12,y=118,elevation=0,power=100}
+ welle={startx=12,starty=118,x=12,y=118,winkel=0,power=100,start=true}
  strecke=1
  win=false
  lose=false
@@ -161,21 +161,25 @@ move()
       win=true
    end
 
-   if not welle.start and pget(sensor.x,sensor.y)==0 then 
+   if not welle.start and (pget(sensor.x,sensor.y)==0 or pget(sensor.x,sensor.y)==3) then 
       --welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
       strecke=0
       printh('spiegel')
-      welle.startx=welle.y
+      welle.startx=welle.x
       welle.starty=welle.y
       spiegelwinkel=get_angle(64, 130, welle.x, welle.y)
       --spiegelwinkel+=0.5
       --normalisieren
-      if (spiegelwinkel>1) spiegelwinkel-=1
-      winkeldiffenrenz=welle.winkel 
-      printh('ele'..sender.elevation)
-      printh ('ww'..welle.winkel)
+      --printh('ele'..sender.elevation)
       printh('sw'..spiegelwinkel)
-      welle.winkel=spiegelwinkel
+      printh ('ww'..welle.winkel)
+      --welle.winkel=(2*spiegelwinkel -welle.winkel+1)%1
+      welle.winkel+=0.5
+      welle.winkel+=spiegelwinkel
+      printh ('rw'..welle.winkel)
+      --if (spiegelwinkel>1) spiegelwinkel-=1
+      --winkeldiffenrenz=welle.winkel 
+      --welle.winkel=spiegelwinkel
     end   
    
    
@@ -298,7 +302,8 @@ function welle_draw(x,y,winkel)
     if (welle.power>0 and welle.start==false) then
     --printh(welle.x)
     --printh(welle.y)
-     draw_segment(welle.x, welle.y+10, 10, 0.15+welle.winkel, 0.35+welle.winkel, 4)
+    pset(welle.x,welle.y,7)
+     --draw_segment(welle.x, welle.y+10, 10, 0.15+welle.winkel, 0.35+welle.winkel, 4)
     else
       welle.start=true
       init_welle()
@@ -415,7 +420,8 @@ function get_angle(ursprungx, ursprungy, zielx, ziely)
     local dx = zielx - ursprungx
     local dy = ursprungy - ziely
     local norm_winkel = atan2(dx, dy)
-     if norm_winkel < 0 then
+    norm_winkel-=0.5
+    if norm_winkel < 0 then
         norm_winkel += 1
     end
     --norm_winkel=norm_winkel*360+90
