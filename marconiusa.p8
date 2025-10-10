@@ -6,7 +6,7 @@ cls()
 text_init()
 write_init()
 game_init()
-intro=false
+intro=true
 end
 
 function _update()
@@ -42,10 +42,10 @@ end
 
 function text_init()
     texte={"ich habe viel erreicht mit"}
-add(texte,"meiner erfindung. ich bin")
+add(texte,"meiner erfindung. ich")
 add(texte,"konnte ein grosses netz von")
 add(texte,"funkstationen aufbauen und")
-add(texte,"viele sender verkaufen")
+add(texte,"viele sender verkaufen.")
 add(texte,"jeder braucht die drahtlose")
 add(texte,"kommunikation und ein leben")
 add(texte,"ohne ist kaum vorstellbar.")
@@ -62,7 +62,7 @@ add(texte,"englands aufgebaut und")
 add(texte,"dann selbst nach kanada")
 add(texte,"gereist. alle sagten das")
 add(texte,"eine solche verbindung nie")
-add(texte,"mれへglich sein kann, weil")
+add(texte,"moeglich sein kann, weil")
 add(texte,"funkwellen sich geradlinig")
 add(texte,"ausbreiten, die erde aber")
 add(texte,"gekruemmt ist. ich will")
@@ -128,8 +128,8 @@ end
 
 function game_init()
    
- sender={x=12,y=118,elevation=0,power=100}
- welle={startx=12,starty=118,x=12,y=118,winkel=0,power=100,start=true}
+ sender={x=12,y=110,elevation=0,power=100}
+ welle={startx=sender.x,starty=sender.y,x=sender.x,y=sender.y,winkel=0,power=sender.power,start=true}
  strecke=1
  win=false
  lose=false
@@ -152,35 +152,27 @@ move()
    sensor={}
    sensor=project_line_polar(welle.startx,welle.starty,welle.winkel,strecke)
    
-   --wenn ionosphäre getroffen dann welle resetten und spiegeln
-   --pset(sensor.x,sensor.y,7)
-   printh(pget(sensor.x,sensor.y))
-
+   --wenn empfänger getroffen dann gewonnen
    if pget(sensor.x,sensor.y)==13 then
-      welle.start=true
-      win=true
+    welle.start=true
+    win=true 
    end
 
+   --wenn ionosphäre getroffen dann welle resetten und spiegeln
    if not welle.start and (pget(sensor.x,sensor.y)==0 or pget(sensor.x,sensor.y)==3) then 
-      --welle={startx=12,starty=118,x=12,y=118,winkel=0,power=50,start=true}
+  
       strecke=0
-      printh('spiegel')
       welle.startx=welle.x
       welle.starty=welle.y
       spiegelwinkel=get_angle(64, 130, welle.x, welle.y)
-      --spiegelwinkel+=0.5
-      --normalisieren
-      --printh('ele'..sender.elevation)
-      printh('sw'..spiegelwinkel)
-      printh ('ww'..welle.winkel)
-      --welle.winkel=(2*spiegelwinkel -welle.winkel+1)%1
       welle.winkel+=0.5
+      if pget(sensor.x,sensor.y)==3 then
+        welle.winkel-=spiegelwinkel
+      else  
       welle.winkel+=spiegelwinkel
-      printh ('rw'..welle.winkel)
-      --if (spiegelwinkel>1) spiegelwinkel-=1
-      --winkeldiffenrenz=welle.winkel 
-      --welle.winkel=spiegelwinkel
-    end   
+      end 
+      welle.winkel=welle.winkel%1
+     end   
    
    
    welle.x=zielpunkt.x
@@ -193,7 +185,7 @@ end
 
 function move()
     if btnp(⬆️) then 
-        if (sender.power<100) sender.power+=1
+        if (sender.power<200) sender.power+=1
     end
     if btnp(⬇️) then 
          if (sender.power>0) sender.power-=1
@@ -230,7 +222,7 @@ function move()
         
        
       if btnp(🅾️) then 
-       print('hier') 
+        
       end 
      end
     
@@ -248,17 +240,16 @@ function init_welle()
 end       
 
 function game_draw()
---map()
 print("sendeleistung:"..sender.power,10,10,7)
 --erde
 circfill( 64, 130, 90, 12 )
 circfill( 64, 130, 50, 3 )
 --empfangsantenne
-ovalfill( 114, 120, 124, 122, 13 )
+ovalfill( 110, 110, 120, 112, 13 )
 antenne_draw()
 
 
---gewonnen
+--gewonnen 4ticks recht pwr>122
 if win then
     
     print("ich bin der beste!",5,29,7)
@@ -299,10 +290,8 @@ end
 function welle_draw(x,y,winkel)
 
      
-    if (welle.power>0 and welle.start==false) then
-    --printh(welle.x)
-    --printh(welle.y)
-    pset(welle.x,welle.y,7)
+    if (welle.power>0 and welle.start==false and welle.x<125) then
+       pset(welle.x,welle.y,7)
      --draw_segment(welle.x, welle.y+10, 10, 0.15+welle.winkel, 0.35+welle.winkel, 4)
     else
       welle.start=true
@@ -311,43 +300,27 @@ function welle_draw(x,y,winkel)
 end   
 
 function draw_rotated_rect(x, y, x2, y2, drehwinkel, farbe)
-    -- 1. Berechne die Abmessungen und den Mittelpunkt des Rechtecks
     local mitte_x = (x + x2) / 2
     local mitte_y = (y + y2) / 2
     local breite = abs(x2 - x)
     local hoehe = abs(y2 - y)
-    
-    -- Halbe Breite und Halbe Höhe
     local halb_breite = breite / 2
     local halb_hoehe = hoehe / 2
-    
-    -- 2. Definiere die 4 Eckpunkte relativ zum Mittelpunkt (ungedreht)
-    -- Die Eckpunkte A, B, C, D werden relativ zum Mittelpunkt (0, 0) definiert
     local punkte = {
         {-halb_breite, -halb_hoehe}, -- A (Oben links)
         {halb_breite, -halb_hoehe}, -- B (Oben rechts)
         {halb_breite, halb_hoehe}, -- C (Unten rechts)
         {-halb_breite, halb_hoehe}  -- D (Unten links)
     }
-
-    -- 3. Drehe und verschiebe jeden Eckpunkt
     local gedrehte_punkte = {}
     
     for i = 1, #punkte do
         local px_rel = punkte[i][1]
         local py_rel = punkte[i][2]
         
-        -- Berechnung der Rotation (Standard-Rotationsformeln)
-        -- cos(Winkel) * x - sin(Winkel) * y
-        -- sin(Winkel) * x + cos(Winkel) * y
-        
-        -- Da die Pico-8-Y-Achse gespiegelt ist, verwenden wir die umgekehrte sin-Funktion 
-        -- (oder kehren das Y-Delta um), um die korrekte Drehrichtung zu erhalten.
-        
         local x_gedreht = cos(drehwinkel) * px_rel - sin(drehwinkel) * py_rel
         local y_gedreht = sin(drehwinkel) * px_rel + cos(drehwinkel) * py_rel
 
-        -- Füge den Mittelpunkt wieder hinzu (Verschiebung)
         add(gedrehte_punkte, {mitte_x + x_gedreht, mitte_y + y_gedreht})
     end
     
@@ -397,11 +370,7 @@ end
 
 
 function project_line_polar(ursprungx, ursprungy, winkel, laenge)
-    -- Konvertiere den Winkel von Grad in Radiant (Pico-8's sin/cos erwarten Radiant)
-    --local rad = (winkel * 0.0174533) -- 0.0174533 ist Pi / 180
     --pico8 nutzt eine bescheuterte winkeldarstellung ich nenne sie pgrad
-    --winkel=winkel-180
-   -- local pgrad = (winkel/360)
     local pgrad = -winkel+0.5
     local dx = sin(pgrad) * laenge
     local dy = cos(pgrad) * laenge
@@ -424,8 +393,6 @@ function get_angle(ursprungx, ursprungy, zielx, ziely)
     if norm_winkel < 0 then
         norm_winkel += 1
     end
-    --norm_winkel=norm_winkel*360+90
-    --if (norm_winkel>360) norm_winkel=norm_winkel- 360 
     return norm_winkel
 
 end
