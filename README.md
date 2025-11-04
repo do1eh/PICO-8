@@ -7,4 +7,4 @@ Meine PICO-8 Module
 * faehrte     -- Multiplayer Tiersuche
 * scoutfinder -- faehrte aber mit Pfadibildern
 * labyrinth   -- Experiment, noch lange nicht fertig
-* Marconi     -- Spiele für das JOI-JOTA 2025. Mehr Infos im PDF. 
+* Marconi     -- Spiele für das JOTI-JOTA 2025. Mehr Infos im PDF. 
