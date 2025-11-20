@@ -1,0 +1,580 @@
+pico-8 cartridge // http://www.pico-8.com
+version 43
+__lua__
+function _init()
+text_init()
+write_init()
+game_init()
+intro=true
+win=false
+end
+
+function _update()
+
+end
+
+function _draw()
+cls()
+map()
+if intro then
+    intro_update()
+    intro_draw()
+else
+    game_draw()
+    game_update()
+end    
+
+end
+-->8
+-- Intro
+function write_init()
+    
+    char_index = 0
+    frame_counter = 0
+    frame_counter2 = 0
+    current_text = ""
+    text_ready = false
+    text_zeile += 1
+    if text_zeile > #texte then
+        intro=false
+        return
+    else
+      text=texte[text_zeile]
+    end
+end
+
+function text_init()
+    texte={"das hat ja prima geklappt!"}
+add(texte,"aber als ich das meinem vater")
+add(texte,"gezeigt habe, meinte er,")
+add(texte,"dass nachrichten in den")
+add(texte,"nebenraum zu funken")
+add(texte,"sinnlos sei, denn da") 
+add(texte,"koennte man ja auch rufen.")
+add(texte,"aber wenn ich")
+add(texte,"es schaffe eine nachricht")
+add(texte,"ueber 300m zu senden,")
+add(texte,"schenkt er mir 1000 lire.")
+add(texte,"bei meinen experimenten")
+add(texte,"habe ich herausgefunden,")
+add(texte,"dass die reichweite")
+add(texte,"verbessert wird, wenn ein")
+add(texte,"geerdetes metallrohr an den")
+add(texte,"knallfunkensender")
+add(texte,"angeschlossen wird.")
+add(texte,"am besten scheint es zu")
+add(texte,"funktionieren, wenn das")
+add(texte,"rohr circa halb so")
+add(texte,"lang ist, wie die")
+add(texte,"wellenlaenge der")
+add(texte,"gesendeten frequenz.")  
+add(texte,"den sender habe ich schon")
+add(texte,"aufgebaut, jetzt muss")
+add(texte,"ich nur noch die")
+add(texte,"antennen auf die richtige")
+add(texte,"laenge abstimmen.")
+add(texte,"der sender zeigt die")  
+add(texte,"frequenz in mhz an.")
+
+delay_frames = 2 -- Wie viele Frames auf einen Buchstaben gewartet wird
+text_zeile = 0
+end
+
+function write(posx, posy)
+    if btnp(🅾️) then intro=false end
+    frame_counter+=1
+    if (btn(❎)) char_index=#text-1
+    if frame_counter >= delay_frames  then
+    frame_counter = 0
+      if char_index < #text then
+        char_index += 1
+        current_text = sub(text, 1, char_index)
+        sfx(3)
+      else
+        text_ready = true
+        frame_counter = 0  
+    end
+    end
+    print(current_text, posx, posy, 7) 
+    
+end
+
+function wait(zeit,posx,posy)
+ frame_counter+=1
+ if frame_counter >= zeit then
+    frame_counter = 0
+    return true
+ else
+    print(current_text, posx, posy, 7)
+    return false
+ end
+end
+
+function intro_update()
+    frame_counter2+=1
+    if frame_counter2==20 then
+       frame_counter2=0
+    end
+end
+
+function intro_draw()
+    
+    --flag animation
+    if frame_counter2<10 then
+        mset(9,9,35)
+    else
+        mset(9,9,36)
+    end
+
+  --  if (text_zeile>10) spr(7,10,60,2,2)
+    if not text_ready then 
+    write(2, 45)
+else
+    if wait(10,2,45) then
+     write_init()
+    end  
+end
+
+if frame_counter==0 then
+   spr(2,34,66,1,2)
+else
+   spr(1,34,66,1,2)
+end
+
+end
+
+
+-->8
+--game
+
+function game_init()
+ player={x=34,y=66,dir='o'}
+ --player={x=190,y=66,dir='w'}
+ win=false
+ txantenne={h=0}
+ rxantenne={h=0}
+ level=1
+--6m -50MHz 4m-75Mhz 20m-15MHz
+ levels={300,200,1000}   
+ 
+end
+
+function checkwin()
+if level<4 then
+    if txantenne.h>=levels[level]-10 and txantenne.h<=levels[level]+10 and rxantenne.h>=levels[level]-10 and rxantenne.h<=levels[level]+10 then
+    win=true
+    if (level==1) sfx(4)
+    if (level==2) sfx(4)
+    if (level==3) sfx(5)
+    level+=1
+    end 
+ end    
+end
+
+
+function game_update()
+ frame_counter+=1
+ if frame_counter==20 then
+    frame_counter=0
+ end
+ checkwin()
+ move()
+ 
+ --if btn(❎) then
+ --   game_init()
+ --end    
+end
+
+function move()
+   
+    --laufen
+    if btn(⬅️) then 
+        if not wandkollision(player,'o',true)  then
+            player.x-=1
+            if frame_counter%6==0 then sfx(2) end
+        end
+        player.dir='o'
+    end
+    if btn(➡️) then 
+        if not wandkollision(player,'w',true)  then
+            player.x+=1
+            if frame_counter%6==0 then sfx(2) end
+        end
+        player.dir='w'
+    end
+
+    --abstimmen
+    if btn(⬆️)then
+        if player.x<25 and player.dir=='o' then
+            if txantenne.h<1000 then 
+                txantenne.h+=10 
+                sfx(0)
+            end
+        end
+        if player.x>222 and player.dir=='w' then
+            if rxantenne.h<1000 then 
+               rxantenne.h+=10 
+               sfx(0)
+            end
+        end
+        --if frame_counter%6==0 then sfx(2) end
+        
+    end
+    if btn(⬇️) then
+        if player.x<25 and player.dir=='o' then
+            if txantenne.h>0 then 
+                txantenne.h-=10 
+                sfx(3)
+            end
+        end
+        if player.x>222 and player.dir=='w' then
+            if rxantenne.h>0 then 
+                rxantenne.h-=10 
+                sfx(3)
+            end
+        end
+        --if frame_counter%6==0 then sfx(2) end
+    end
+   
+end   
+
+function wandkollision(object, dir,bauteil)
+    if dir=='n' then
+        if fget(mget(object.x/8,object.y/8),0) then
+            return true
+        end
+    end
+    if dir=='s' then
+        if not bauteil and fget(mget(object.x/8,object.y/8+1),0) then
+            return true
+        else
+            if bauteil and fget(mget(object.x/8,object.y/8+2),0) then
+            return true
+            end
+        end
+    end
+    if dir=='o' then
+        if fget(mget(object.x/8,object.y/8),0) or fget(mget(object.x/8,object.y/8+1),0) then
+            return true
+        end
+    end
+    if dir=='w' then
+        if fget(mget(object.x/8+1,object.y/8),0) or fget(mget(object.x/8+1,object.y/8+1),0) then
+            return true
+        end
+    end    
+    return false
+end
+
+
+function game_draw()
+
+if level==1 then
+    mset(0,8,39)
+    mset(1,8,40)
+end
+if level==2 then
+    mset(0,8,55)
+    mset(1,8,56)
+end
+if level==3 then
+    mset(0,8,41)
+    mset(1,8,42)
+end
+
+
+--map scrolling
+if player.x>64 and player.x<185then
+    map(0,0,-player.x+64,0,128,32)
+else
+    if player.x>=185 then
+        
+        map(0,0,-185+64,0,128,32)
+    else
+    map()
+end 
+end
+
+--flag animation
+if frame_counter<10 then
+    mset(9,9,35)
+    mset(16,9,35)
+    mset(23,9,35)
+    
+else
+    mset(9,9,36)
+    mset(16,9,36)
+    mset(23,9,36)
+end
+--player animation
+if player.x%2==0 then
+    playersprite=3
+else
+    playersprite=4
+end
+if(player.dir=='w') then
+    if player.x<64 then
+      spr(playersprite,player.x,player.y,1,2,true,false)
+    else
+       if player.x<185 then
+         spr(playersprite,64,player.y,1,2,true,false)
+       else
+         spr(playersprite,player.x+64-188,player.y,1,2,true,false) 
+       end
+    end
+end
+
+if(player.dir=='o') then 
+  if player.x<64 then  
+    spr(playersprite,player.x,player.y,1,2)
+  else
+    if player.x<185 then
+      spr(playersprite,64,player.y,1,2)
+    else
+      spr(playersprite,player.x+64-188,player.y,1,2)  
+  end 
+end
+end
+
+--antennen zeichnen mit mapscrolling
+--tx
+if player.x<64 then
+    line(18,64,18,64-(txantenne.h/16),7)
+else
+    line(18-player.x+64,64,18-player.x+64,64-(txantenne.h/16),7) 
+end
+--rx
+if player.x>185 then
+    line(116,64,116,64-(rxantenne.h/16),7)
+else
+    line(116-(player.x-185),64,116-(player.x-185),64-(rxantenne.h/16),7)
+end
+
+--gewonnen
+if win then
+    if level==1 then
+        print("Level1",10,10,7)
+    else
+    if level==2 then
+        print("oh nein, die frequenz",5,10,7)
+        print("hat sich geaendert!",5,20,7)
+    else
+    if level==3 then
+        print("oh nein, die frequenz",5,10,10)
+        print("hat sich wieder geaendert!",5,20,10)
+    else
+    if level==4 then
+        print("juhu! jetzt bin ich",5,10,7) 
+        print("1000 lire reicher!",5,20,7)
+        print("das loesungswort ist: pferd",5,30,7)
+        mset(30,8,10)
+        mset(30,9,26)
+    end
+    end
+    end 
+    end
+end
+if player.x<25 then 
+    value=txantenne.h/100
+    print(value.."m",25,60,7)
+end
+if player.x>222 then
+    value=rxantenne.h/100
+    print(value.."m",95,60,7)
+    
+end     
+if player.x<25 or player.x>222 then
+    print("druecke ⬆️⬇️ zum abstimmen",10,120,7)
+else
+    print("druecke ⬅️➡️ zum bewegen",10,120,7)
+end
+--print(levels[level],10,10,7)
+--print(txantenne.h,10,20,7)
+end
+
+__gfx__
+000000000555550005555500005555500055555000555550000000006666666666666666cccccccccccccccccc6cccccccccc6cc000660000006600000000000
+000000000c66c5000c66c50000c6665000c6665000555550000000006555555555555556c777777cc777177ccc6c55cccc55c6cc000660000006600000000000
+0070070006666600066666000066665000666650005555500000000065dddddddddddd76c771777cc771777ccc6c55cccc55c6cc000660000006600000000000
+0007700006ee660006ee660000e6665000e66650005555500000000065dddddddddddd766777717c6777177c6665555cc5555666000660006666600000000000
+000770000777770007ee77000077777000777770007777700000000065dddddddddddd766717777c6771777c6665555cc5555666000660006666600000000000
+0070070011777110117771100111111101111111011111110000000065dddddddddddd76c777177cc777177ccc6c55cccc55c6cc000660000000000000000000
+0000000011777110117771100111111101111111011111110000000065dddddddddddd76c717777cc771777ccc6cccccccccc6cc000660000000000000000000
+000000001117111011171110111111111111111101111111000000006777777777777776c777717cc777177ccc6cccccccccc6cc000660000000000000000000
+000000001117111011171110111111111111111101111111000000006666666666666666c717777cc771777c0000000000000000000000000000000000000000
+00000000111111101111111001111111011111110111111100000000666666aaaa666666c777777cc777177c0777777777777770077777777777777000000000
+0000000055555550555555500055555500055550055555550000000066666aaaa6666666c771777cc771777c0707777707707770077777777777777000000000
+0000000055555550555555500055555500055550055555550000000066666aaa666666666777717c6777177c6777707777777076670707070707070600000000
+00000000555055505550555000550055000555500555055500000000666666aaa66666666717777c6771777c6707777077777776607070707070707600000000
+0000000055000550550005500550055500555550055000550000000066666aaa66666666c777177cc777177c0777707770770770077777777777777000000000
+0000000000000000000000000000000000000000000000000000000066666aa666666666c777777cc771777c0777777777777770077777777777777000000000
+000000000000000000000000000000000000000000000000000000006666666666666666cccccccccccccccc0000000000000000000000000000000000000000
+3333333344444444cccccccccccc885cccccc85c0000000000000000666666666666666666666666666666660000000000000000000000000000000000000000
+3333333349444444ccccccccc888885ccccc885c0000000000000000655555555555555665555555555555567777777000000000000000000000000000000000
+4944499444444494cccccccc8888885cc888885c000000000000000065dddd11d111dd7665dddd11d111dd760770777000000000000000000000000000000000
+4444444444444444ccccccccc888885c8888885c000000000000000065dddd1dd1d1dd7665ddd1d1d1dddd767777707600000000000000000000000000000000
+4499444444444444cccccccccccc885cc888885c000000000000000065dddd11d1d1dd7665ddddd1d111dd767777777600000000000000000000000000000000
+4444444444444444cccccccccccccc5ccccccc5c000000000000000065ddddd1d1d1dd7665ddddd1ddd1dd767077077000000000000000000000000000000000
+4444494449944444cccccccccccccc5ccccccc5c000000000000000065dddd11d111dd7665ddddd1d111dd767777777000000000000000000000000000000000
+4444444444444444cccccccccccccc5ccccccc5c0000000000000000677777777777777667777777777777760000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000666666666666666666666666666666660000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000655555555555555665555555555555560000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000065d111d111dddd7665d111d111dddd760000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000065ddd1d1dddddd7665ddd1d1dddddd760000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000065ddd1d111dddd7665ddd1d111dddd760000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000065ddd1ddd1dddd7665ddd1ddd1dddd760000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000065ddd1d111dddd7665ddd1d111dddd760000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000677777777777777667777777777777760000000000000000000000000000000000000000
+__label__
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cccccccccccccccccc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+6666666666666666cc7ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+6555555555555556cc6c55cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+65dddd11d111dd76cc6c55cccccccccccccccc55555ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+65dddd1dd1d1dd766665555cccccccccccccccc6665ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+65dddd11d1d1dd766665555ccccccccccccccc66665ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+65ddddd1d1d1dd76cc6c55cccccccccccccccce6665ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+65dddd11d111dd76cc6ccccccccccccccccccc77777ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+6777777777777776cc6cccccccccccccccccc1111111cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+6666666666666666cc6cccccccccccccccccc1111111cccccccccccccccccccccccccccccccc885ccccccccccccccccccccccccccccccccccccccccccccccccc
+666666aaaa666666cc6c55cccccccccccccc11111111ccccccccccccccccccccccccccccc888885ccccccccccccccccccccccccccccccccccccccccccccccccc
+66666aaaa6666666cc6c55cccccccccccccc11111111cccccccccccccccccccccccccccc8888885ccccccccccccccccccccccccccccccccccccccccccccccccc
+66666aaa666666666665555cccccccccccccc1111111ccccccccccccccccccccccccccccc888885ccccccccccccccccccccccccccccccccccccccccccccccccc
+666666aaa66666666665555ccccccccccccccc555555cccccccccccccccccccccccccccccccc885ccccccccccccccccccccccccccccccccccccccccccccccccc
+66666aaa66666666cc6c55cccccccccccccccc555555cccccccccccccccccccccccccccccccccc5ccccccccccccccccccccccccccccccccccccccccccccccccc
+66666aa666666666cc6ccccccccccccccccccc55cc55cccccccccccccccccccccccccccccccccc5ccccccccccccccccccccccccccccccccccccccccccccccccc
+6666666666666666cc6cccccccccccccccccc55cc555cccccccccccccccccccccccccccccccccc5ccccccccccccccccccccccccccccccccccccccccccccccccc
+33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+49444994494449944944499449444994494449944944499449444994494449944944499449444994494449944944499449444994494449944944499449444994
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+44994444449944444499444444994444449944444499444444994444449944444499444444994444449944444499444444994444449944444499444444994444
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+44444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444494444444944
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+49444444494444444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444
+44444494444444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444494444444944444449444444494
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+49944444499444444994444449944444499444444994444449944444499444444994444449944444499444444994444449944444499444444994444449944444
+44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000007700777070707770077070707770000007777700077777000000777070707770000077707770707077700770777077000000000000000000000000
+00000000007070707070707000700070707000000077700770770077700000007070707770000070707000707070007000700070700000000000000000000000
+00000000007070770070707700700077007700000077000770770007700000070070707070000077007700707077007000770070700000000000000000000000
+00000000007070707070707000700070707000000077700770770077700000700070707070000070707000777070007070700070700000000000000000000000
+00000000007770707007707770077070707770000007777700077777000000777007707070000077707770777077707770777070700000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+__gff__
+0000000000000000000000010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__map__
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2222222222222222222222222222222222222222222222222222222222222222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+07080b22222222222222222222222222222222222222222222222222220c0922000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+17180b22222222222223222222222222232222222222222322222222220c1922000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2020202020202020202020202020202020202020202020202020202020202020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+2121212121212121212121212121212121212121212121212121212121212121000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+00030000040500d050170001e00000200012000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000003b5503b500005001850000000000000000029500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00010000005302c600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000300001a03013030100000a00000000000000100025000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000000515005150051500000005150051500515000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000800001f2501f2501f2001f250002001f2501f250000001f25000000000001f2501f250000001f2501f250000001f250000001f2501f2500000000000000000000000000000000000000000000000000000000
