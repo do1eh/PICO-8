@@ -4,14 +4,11 @@ __lua__
 function _init()
 speed = 0
 gravitation=0.4
-sprungkraft=-4
+sprungkraft=-6
 
  x =  10
  y = 40
  spiegeln=false
- dy=0
- ravitation=0.4
- sprungkraft=-6 
  gameover=false
  win=false
 end
