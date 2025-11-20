@@ -79,11 +79,7 @@ end
 else
 if btnp(❎) then
    --reset
-   gameover=false
-   win=false
-   x=2
-   y=56
-   speed=0
+   _init()
 end
 end  
 end
@@ -91,16 +87,14 @@ end
 
 function _draw()
 cls()
---if not gameover then
-
-   map()
-   
+map()
+if not win then   
    if speed!=0 then
      spr(flr(frame+7),x,y,1,1,spiegeln)
    else
      spr(flr(frame),x,y,1,1,spiegeln)
    end
---end
+  end
 
 --rect(x+1, y+4, x+6, y+7, 8)
 if gameover then
